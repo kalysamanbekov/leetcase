@@ -25,6 +25,23 @@ async function createThread() {
 }
 
 /**
+ * Проверяет существование ассистента по его ID
+ * @param {string} assistantId - ID ассистента для проверки
+ * @returns {Promise<boolean>} - true, если ассистент существует, иначе false
+ */
+async function validateAssistant(assistantId) {
+  try {
+    console.log(`[DEBUG] Проверяем существование ассистента: ${assistantId}`);
+    const assistant = await openai.beta.assistants.retrieve(assistantId);
+    console.log(`[DEBUG] Ассистент найден: ${assistant.name || assistant.id}`);
+    return true;
+  } catch (error) {
+    console.error(`[DEBUG] Ошибка при проверке ассистента: ${error.message}`);
+    return false;
+  }
+}
+
+/**
  * Создает новую сессию для пользователя с выбранным ассистентом
  * @param {string} userId - ID пользователя
  * @param {string} assistantId - ID ассистента
@@ -33,6 +50,12 @@ async function createThread() {
  */
 async function createSession(userId, assistantId, category) {
   try {
+    // Проверяем существование ассистента
+    const isValid = await validateAssistant(assistantId);
+    if (!isValid) {
+      throw new Error(`Ассистент с ID ${assistantId} не найден`);
+    }
+    
     // Создаем новый тред
     const threadId = await createThread();
     
