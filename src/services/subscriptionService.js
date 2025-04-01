@@ -7,7 +7,7 @@
 const userSubscriptions = {};
 
 // Константы
-const FREE_REQUESTS_LIMIT = 3;
+const FREE_REQUESTS_LIMIT = 10;
 const SUBSCRIPTION_PRICE = 2990;
 const SUBSCRIPTION_CURRENCY = 'рублей';
 
