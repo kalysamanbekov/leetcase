@@ -1,5 +1,7 @@
 const ASSISTANTS = require('../config/assistants');
 const assistantsService = require('../services/assistantsService');
+const subscriptionService = require('../services/subscriptionService');
+const channelSubscriptionService = require('../services/channelSubscriptionService');
 
 /**
  * Отправляет пользователю список доступных категорий кейсов
@@ -187,6 +189,33 @@ async function handleCaseMessage(bot, msg) {
   }
   
   try {
+    // Проверяем, имеет ли пользователь премиум-доступ
+    const hasPremium = await channelSubscriptionService.hasPremiumAccess(bot, userId);
+    
+    // Если у пользователя нет премиум-доступа, проверяем лимит запросов
+    if (!hasPremium) {
+      // Проверяем, может ли пользователь отправить запрос
+      if (!subscriptionService.canSendRequest(userId)) {
+        // Если лимит исчерпан, отправляем сообщение о необходимости подписки
+        await channelSubscriptionService.sendSubscriptionRequiredMessage(bot, chatId);
+        return;
+      }
+      
+      // Регистрируем запрос пользователя
+      subscriptionService.registerRequest(userId);
+      
+      // Получаем информацию о подписке
+      const subscriptionInfo = subscriptionService.getSubscriptionInfo(userId);
+      
+      // Отправляем информацию о количестве оставшихся запросов
+      if (subscriptionInfo.remainingFreeRequests > 0) {
+        await bot.sendMessage(
+          chatId,
+          `ℹ️ У вас осталось ${subscriptionInfo.remainingFreeRequests} бесплатных запросов.`
+        );
+      }
+    }
+    
     // Отправляем индикатор "печатает..."
     bot.sendChatAction(chatId, 'typing');
     
