@@ -179,6 +179,61 @@ async function handleCaseMessage(bot, msg) {
   
   console.log(`[DEBUG] Обработка сообщения от пользователя ${userId}: "${text}"`);
   
+  // Проверяем, не является ли сообщение вариантом фразы "я не знаю ответа"
+  const dontKnowPhrases = [
+    'я не знаю',
+    'не знаю',
+    'не знаю ответ',
+    'не знаю ответа',
+    'я не знаю ответ',
+    'я не знаю ответа',
+    'не могу ответить',
+    'затрудняюсь ответить'
+  ];
+  
+  const isDontKnowPhrase = dontKnowPhrases.some(phrase => 
+    text.toLowerCase().includes(phrase.toLowerCase())
+  );
+  
+  // Если пользователь говорит, что не знает ответа, отправляем специальный ответ
+  if (isDontKnowPhrase && assistantsService.hasActiveSession(userId)) {
+    console.log(`[DEBUG] Пользователь ${userId} не знает ответа, отправляем подсказку`);
+    
+    try {
+      // Отправляем индикатор "печатает..."
+      bot.sendChatAction(chatId, 'typing');
+      
+      // Получаем информацию о текущей сессии
+      const sessionInfo = assistantsService.getSessionInfo(userId);
+      const category = sessionInfo ? sessionInfo.category : 'неизвестная категория';
+      
+      // Формируем ответ с подсказкой
+      const hintResponse = `Не беспокойтесь, если вы не знаете ответ на этот кейс из категории "${category}". 
+
+Вот несколько советов, которые могут помочь:
+
+1. Попробуйте разбить задачу на более мелкие части
+2. Подумайте о похожих задачах, которые вы решали раньше
+3. Задайте уточняющие вопросы, если что-то непонятно
+
+Если хотите попробовать другой кейс, используйте команду /case для выбора новой категории.`;
+      
+      // Отправляем ответ пользователю
+      bot.sendMessage(chatId, hintResponse)
+        .then(() => {
+          console.log(`[DEBUG] Подсказка успешно отправлена пользователю ${userId}`);
+        })
+        .catch((error) => {
+          console.error(`[DEBUG] Ошибка при отправке подсказки пользователю ${userId}: ${error.message}`);
+        });
+      
+      return;
+    } catch (error) {
+      console.error(`[DEBUG] Ошибка при обработке фразы "не знаю ответа": ${error.message}`);
+      console.error(error.stack);
+    }
+  }
+  
   // Проверяем, есть ли активная сессия
   if (!assistantsService.hasActiveSession(userId)) {
     console.log(`[DEBUG] У пользователя ${userId} нет активной сессии`);
