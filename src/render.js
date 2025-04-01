@@ -4,7 +4,9 @@
 
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('./config');
-const { setupWebhook, startServer } = require('./webhook');
+const path = require('path');
+const webhookPath = path.join(__dirname, 'webhook.js');
+const { setupWebhook, startServer } = require(webhookPath);
 
 // u041fu0440u043eu0432u0435u0440u043au0430 u043du0430u043bu0438u0447u0438u044f u0442u043eu043au0435u043du0430
 if (!config.telegramToken) {
@@ -37,14 +39,51 @@ const adminHandlers = require('./handlers/adminHandlers');
 const menuHandlers = require('./handlers/menuHandlers');
 const whisperService = require('./services/whisperService');
 
-// u0420u0435u0433u0438u0441u0442u0440u0438u0440u0443u0435u043c u0432u0441u0435 u043eu0431u0440u0430u0431u043eu0442u0447u0438u043au0438 u043au043eu043cu0430u043du0434
-bot.onText(/\/start/, (msg) => commandHandlers.handleStart(bot, msg));
-bot.onText(/\/help/, (msg) => commandHandlers.handleHelp(bot, msg));
-bot.onText(/\/reset/, (msg) => commandHandlers.handleReset(bot, msg));
-bot.onText(/\/case/, (msg) => caseHandlers.handleCase(bot, msg));
-bot.onText(/\/menu/, (msg) => menuHandlers.handleMenu(bot, msg));
-bot.onText(/\/admin/, (msg) => adminHandlers.handleAdmin(bot, msg));
-bot.onText(/\/subscription/, (msg) => subscriptionHandlers.handleSubscription(bot, msg));
+// Импортируем утилиты для работы с чатами
+const chatUtils = require('./utils/chatUtils');
+
+// u0420u0435u0433u0438u0441u0442u0440u0438u0440u0443u0435u043c u0432u0441u0435 u043eu0431u0440u0430u0431u043eu0442u0447u0438u043au0438 u043au043eu043cu0430u043du0434 - u043eu0442u0432u0435u0447u0430u0435u043c u0442u043eu043bu044cu043au043e u0432 u043fu0440u0438u0432u0430u0442u043du044bu0445 u0447u0430u0442u0430u0445
+bot.onText(/\/start/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    commandHandlers.handleStart(bot, msg);
+  }
+});
+
+bot.onText(/\/help/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    commandHandlers.handleHelp(bot, msg);
+  }
+});
+
+bot.onText(/\/reset/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    commandHandlers.handleReset(bot, msg);
+  }
+});
+
+bot.onText(/\/case/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    caseHandlers.handleCase(bot, msg);
+  }
+});
+
+bot.onText(/\/menu/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    menuHandlers.handleMenu(bot, msg);
+  }
+});
+
+bot.onText(/\/admin/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    adminHandlers.handleAdmin(bot, msg);
+  }
+});
+
+bot.onText(/\/subscription/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    subscriptionHandlers.handleSubscription(bot, msg);
+  }
+});
 
 // u041eu0431u0440u0430u0431u043eu0442u0447u0438u043a u0437u0430u0432u0435u0440u0448u0435u043du0438u044f u043fu0440u043eu0446u0435u0441u0441u0430
 process.on('SIGINT', () => {
