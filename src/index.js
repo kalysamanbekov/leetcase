@@ -12,6 +12,9 @@ const subscriptionService = require('./services/subscriptionService');
 const whisperService = require('./services/whisperService');
 const { generateResponse } = require('./services/openaiService');
 
+// Импортируем HTTP-сервер для Render
+require('./server');
+
 // Проверка наличия токена
 if (!config.telegramToken) {
   console.error('Ошибка: Не указан токен Telegram бота. Добавьте TELEGRAM_BOT_TOKEN в файл .env');
