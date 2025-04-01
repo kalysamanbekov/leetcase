@@ -6,8 +6,10 @@ const aiHandler = require('./handlers/aiHandler');
 const caseHandlers = require('./handlers/caseHandlers');
 const subscriptionHandlers = require('./handlers/subscriptionHandlers_new');
 const adminHandlers = require('./handlers/adminHandlers');
+const menuHandlers = require('./handlers/menuHandlers');
 const assistantsService = require('./services/assistantsService');
 const subscriptionService = require('./services/subscriptionService');
+const whisperService = require('./services/whisperService');
 const { generateResponse } = require('./services/openaiService');
 
 // Проверка наличия токена
@@ -25,6 +27,7 @@ console.log('Бот запущен...');
 bot.onText(/\/start/, (msg) => commandHandlers.handleStart(bot, msg));
 bot.onText(/\/help/, (msg) => commandHandlers.handleHelp(bot, msg));
 bot.onText(/\/info/, (msg) => commandHandlers.handleInfo(bot, msg));
+bot.onText(/\/reset/, (msg) => commandHandlers.handleReset(bot, msg));
 
 // Обработчик команды /ai с параметрами
 bot.onText(/\/ai (.+)/, (msg, match) => {
@@ -91,6 +94,18 @@ bot.onText(/\/add_premium (.+)/, (msg, match) => adminHandlers.handleAddPremiumC
 bot.on('text', async (msg) => {
   // Проверяем, что сообщение не является командой
   if (!msg.text.startsWith('/')) {
+    // Проверяем, является ли сообщение нажатием на кнопку меню
+    const menuButtons = [
+      '❓ Помощь',
+      '👤 Мой профиль'
+    ];
+    
+    if (menuButtons.includes(msg.text)) {
+      // Если это нажатие на кнопку меню, обрабатываем его
+      menuHandlers.handleMenuSelection(bot, msg);
+      return;
+    }
+    
     const userId = msg.from.id.toString();
     
     // Проверяем, есть ли активная сессия с ассистентом
@@ -135,6 +150,45 @@ bot.on('text', async (msg) => {
 // Обработчик фото
 bot.on('photo', (msg) => messageHandlers.handlePhoto(bot, msg));
 
+// Обработчик голосовых сообщений
+bot.on('voice', async (msg) => {
+  const userId = msg.from.id.toString();
+  const chatId = msg.chat.id;
+  
+  try {
+    // Проверяем, может ли пользователь отправить запрос
+    if (subscriptionService.canSendRequest(userId)) {
+      // Регистрируем запрос
+      subscriptionService.registerRequest(userId);
+      
+      // Обрабатываем голосовое сообщение
+      const transcribedText = await whisperService.handleVoiceMessage(bot, msg);
+      
+      if (transcribedText) {
+        // Отправляем распознанный текст пользователю
+        await bot.sendMessage(chatId, `Ваш запрос: ${transcribedText}`);
+        
+        // Проверяем, есть ли активная сессия с ассистентом
+        if (assistantsService.hasActiveSession(userId)) {
+          // Отправляем запрос в активную сессию
+          const response = await assistantsService.sendMessage(userId, transcribedText);
+          await bot.sendMessage(chatId, response);
+        } else {
+          // Отправляем запрос в OpenAI API
+          const response = await generateResponse(transcribedText);
+          await bot.sendMessage(chatId, response);
+        }
+      }
+    } else {
+      // Отправляем сообщение о необходимости подписки
+      subscriptionHandlers.sendSubscriptionRequiredMessage(bot, chatId);
+    }
+  } catch (error) {
+    console.error('Ошибка при обработке голосового сообщения:', error);
+    await bot.sendMessage(chatId, 'Произошла ошибка при обработке голосового сообщения. Пожалуйста, попробуйте еще раз или введите запрос текстом.');
+  }
+});
+
 // Обработчик ошибок
 bot.on('polling_error', (error) => {
   console.error(`Ошибка polling: ${error.message}`);
@@ -143,7 +197,8 @@ bot.on('polling_error', (error) => {
 // Обработчик необработанных сообщений
 bot.on('message', (msg) => {
   // Обрабатываем только те типы сообщений, которые не обрабатываются выше
-  if (!msg.text && !msg.photo) {
+  // Не отправляем сообщение об ошибке для голосовых сообщений
+  if (!msg.text && !msg.photo && !msg.voice) {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'Я пока не умею обрабатывать этот тип сообщений.');
   }

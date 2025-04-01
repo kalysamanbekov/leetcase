@@ -43,12 +43,14 @@ function handleCaseCommand(bot, msg) {
  * @param {number} chatId - ID чата
  */
 function sendCategoriesList(bot, chatId) {
-  const keyboard = [];
-  
-  // Создаем кнопки для каждой категории
-  ASSISTANTS.categories.forEach(category => {
-    keyboard.push([{ text: category, callback_data: `category_${category}` }]);
-  });
+  // Создаем кнопки для всех категорий
+  const keyboard = [
+    [{ text: '📊 Аналитика', callback_data: 'category_📊 Аналитика' }],
+    [{ text: '🌐 Стратегия', callback_data: 'category_🌐 Стратегия' }],
+    [{ text: '🤝 Soft Skills', callback_data: 'category_🤝 Soft Skills' }],
+    [{ text: '🚀 Product Sense', callback_data: 'category_🚀 Product Sense' }],
+    [{ text: '🧩 Брейнтизеры', callback_data: 'category_🧩 Брейнтизеры' }]
+  ];
   
   bot.sendMessage(
     chatId,

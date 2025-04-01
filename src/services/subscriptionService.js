@@ -8,7 +8,8 @@ const userSubscriptions = {};
 
 // Константы
 const FREE_REQUESTS_LIMIT = 3;
-const SUBSCRIPTION_PRICE = 29;
+const SUBSCRIPTION_PRICE = 2990;
+const SUBSCRIPTION_CURRENCY = 'рублей';
 
 /**
  * Инициализирует данные пользователя, если они еще не существуют
@@ -134,5 +135,6 @@ module.exports = {
   checkSubscriptionExpiry,
   resetRequestsCount,
   FREE_REQUESTS_LIMIT,
-  SUBSCRIPTION_PRICE
+  SUBSCRIPTION_PRICE,
+  SUBSCRIPTION_CURRENCY
 };
