@@ -12,7 +12,7 @@ module.exports = {
   
   // Настройки бота
   botConfig: {
-    polling: true, // Использовать long polling вместо webhook
+    polling: process.env.NODE_ENV === 'development', // Использовать long polling только в режиме разработки
   },
   
   // Настройки OpenAI

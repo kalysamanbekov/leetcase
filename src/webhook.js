@@ -1,0 +1,77 @@
+/**
+ * u041cu043eu0434u0443u043bu044c u0434u043bu044f u043du0430u0441u0442u0440u043eu0439u043au0438 webhook u0438 u0437u0430u043fu0443u0441u043au0430 Express u0441u0435u0440u0432u0435u0440u0430
+ */
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const config = require('./config');
+
+// u041fu043eu0440u0442 u0434u043bu044f u0441u0435u0440u0432u0435u0440u0430 (Render u0438u0441u043fu043eu043bu044cu0437u0443u0435u0442 u043fu0435u0440u0435u043cu0435u043du043du0443u044e u043eu043au0440u0443u0436u0435u043du0438u044f PORT)
+const PORT = process.env.PORT || 3000;
+
+// u0421u043eu0445u0440u0430u043du044fu0435u043c u0441u0441u044bu043bu043au0443 u043du0430 u044du043au0437u0435u043cu043fu043bu044fu0440 u0431u043eu0442u0430 u0434u043bu044f u0438u0441u043fu043eu043bu044cu0437u043eu0432u0430u043du0438u044f u0432 u043eu0431u0440u0430u0431u043eu0442u0447u0438u043au0435 webhook
+let botInstance = null;
+
+/**
+ * u041du0430u0441u0442u0440u0430u0438u0432u0430u0435u0442 webhook u0434u043bu044f Telegram u0431u043eu0442u0430
+ * @param {TelegramBot} bot - u044du043au0437u0435u043cu043fu043bu044fu0440 Telegram u0431u043eu0442u0430
+ */
+function setupWebhook(bot) {
+  const webhookUrl = process.env.WEBHOOK_URL;
+  botInstance = bot; // u0421u043eu0445u0440u0430u043du044fu0435u043c u0441u0441u044bu043bu043au0443 u043du0430 u0431u043eu0442u0430
+  
+  // u0423u0434u0430u043bu044fu0435u043c u043fu0440u0435u0434u044bu0434u0443u0449u0438u0439 webhook (u0435u0441u043bu0438 u0431u044bu043b)
+  bot.deleteWebHook()
+    .then(() => {
+      // u0423u0441u0442u0430u043du0430u0432u043bu0438u0432u0430u0435u043c u043du043eu0432u044bu0439 webhook
+      return bot.setWebHook(`${webhookUrl}/bot${config.telegramToken}`);
+    })
+    .then(result => {
+      console.log(`Webhook u0443u0441u0442u0430u043du043eu0432u043bu0435u043d: ${result}`);
+    })
+    .catch(error => {
+      console.error('u041eu0448u0438u0431u043au0430 u043fu0440u0438 u0443u0441u0442u0430u043du043eu0432u043au0435 webhook:', error);
+    });
+}
+
+/**
+ * u0417u0430u043fu0443u0441u043au0430u0435u0442 Express u0441u0435u0440u0432u0435u0440 u0434u043bu044f u043eu0431u0440u0430u0431u043eu0442u043au0438 webhook u0437u0430u043fu0440u043eu0441u043eu0432
+ * @returns {Server} - u044du043au0437u0435u043cu043fu043bu044fu0440 HTTP u0441u0435u0440u0432u0435u0440u0430
+ */
+function startServer() {
+  const app = express();
+  
+  // u041fu0430u0440u0441u0438u043du0433 JSON
+  app.use(bodyParser.json());
+  
+  // u041cu0430u0440u0448u0440u0443u0442 u0434u043bu044f u043fu0440u043eu0432u0435u0440u043au0438 u0440u0430u0431u043eu0442u043eu0441u043fu043eu0441u043eu0431u043du043eu0441u0442u0438
+  app.get('/', (req, res) => {
+    res.send('Telegram Bot Webhook Server is running!');
+  });
+  
+  // u041cu0430u0440u0448u0440u0443u0442 u0434u043bu044f u043fu043eu043bu0443u0447u0435u043du0438u044f u0441u043eu043eu0431u0449u0435u043du0438u0439 u043eu0442 Telegram
+  app.post(`/bot${config.telegramToken}`, (req, res) => {
+    if (!botInstance) {
+      console.error('u041eu0448u0438u0431u043au0430: u0411u043eu0442 u043du0435 u0438u043du0438u0446u0438u0430u043bu0438u0437u0438u0440u043eu0432u0430u043d');
+      return res.sendStatus(500);
+    }
+    
+    // u041fu043eu043bu0443u0447u0430u0435u043c u0434u0430u043du043du044bu0435 u043eu0442 Telegram
+    botInstance.processUpdate(req.body);
+    
+    // u041eu0442u0432u0435u0447u0430u0435u043c u0443u0441u043fu0435u0445u043eu043c, u0447u0442u043eu0431u044b Telegram u043du0435 u043fu0435u0440u0435u043fu043eu0441u044bu043bu0430u043b u0437u0430u043fu0440u043eu0441
+    res.sendStatus(200);
+  });
+  
+  // u0417u0430u043fu0443u0441u043a u0441u0435u0440u0432u0435u0440u0430
+  const server = app.listen(PORT, () => {
+    console.log(`u0421u0435u0440u0432u0435u0440 u0437u0430u043fu0443u0449u0435u043d u043du0430 u043fu043eu0440u0442u0443 ${PORT}`);
+  });
+  
+  return server;
+}
+
+module.exports = {
+  setupWebhook,
+  startServer
+};

@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js",
+    "start": "node render-start.js",
     "dev": "nodemon src/index.js",
     "webhook": "node src/webhook.js",
     "render": "node src/render.js"
