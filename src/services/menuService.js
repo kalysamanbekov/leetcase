@@ -10,13 +10,8 @@ const { ReplyKeyboardMarkup } = require('node-telegram-bot-api');
  */
 function createMainMenu() {
   return {
-    keyboard: [
-      [{ text: '❓ Помощь' }],
-      [{ text: '👤 Мой профиль' }]
-    ],
-    resize_keyboard: true,
-    persistent: true,
-    one_time_keyboard: false
+    keyboard: [],
+    remove_keyboard: true
   };
 }
 
