@@ -177,8 +177,11 @@ async function handleCaseMessage(bot, msg) {
   const userId = msg.from.id.toString();
   const text = msg.text;
   
+  console.log(`[DEBUG] Обработка сообщения от пользователя ${userId}: "${text}"`);
+  
   // Проверяем, есть ли активная сессия
   if (!assistantsService.hasActiveSession(userId)) {
+    console.log(`[DEBUG] У пользователя ${userId} нет активной сессии`);
     bot.sendMessage(
       chatId,
       'У вас нет активной сессии. Используйте команду /case, чтобы выбрать категорию кейса.'
@@ -187,16 +190,28 @@ async function handleCaseMessage(bot, msg) {
   }
   
   try {
+    console.log(`[DEBUG] Отправляем индикатор "печатает..." для пользователя ${userId}`);
     // Отправляем индикатор "печатает..."
     bot.sendChatAction(chatId, 'typing');
     
+    console.log(`[DEBUG] Отправляем сообщение ассистенту для пользователя ${userId}`);
     // Отправляем сообщение ассистенту и получаем ответ
     const response = await assistantsService.sendMessage(userId, text);
     
+    console.log(`[DEBUG] Получен ответ от ассистента для пользователя ${userId}: "${response.substring(0, 100)}..."${response.length > 100 ? '' : '"'}`);
+    
+    console.log(`[DEBUG] Отправляем ответ пользователю ${userId}`);
     // Отправляем ответ пользователю
-    bot.sendMessage(chatId, response);
+    bot.sendMessage(chatId, response)
+      .then(() => {
+        console.log(`[DEBUG] Ответ успешно отправлен пользователю ${userId}`);
+      })
+      .catch((error) => {
+        console.error(`[DEBUG] Ошибка при отправке ответа пользователю ${userId}: ${error.message}`);
+      });
   } catch (error) {
-    console.error('Ошибка при обработке сообщения:', error);
+    console.error(`[DEBUG] Ошибка при обработке сообщения от пользователя ${userId}: ${error.message}`);
+    console.error(error.stack);
     
     bot.sendMessage(
       chatId,
