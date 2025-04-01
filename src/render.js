@@ -85,6 +85,34 @@ bot.onText(/\/subscription/, (msg) => {
   }
 });
 
+// Обработчик callback запросов (для кнопок)
+bot.on('callback_query', (callbackQuery) => {
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(callbackQuery.message)) {
+    const data = callbackQuery.data;
+    
+    if (data.startsWith('category_')) {
+      // Обработка выбора категории кейса
+      caseHandlers.handleCategorySelection(bot, callbackQuery);
+    } else if (data === 'end_session') {
+      // Обработка завершения сессии
+      caseHandlers.handleEndSession(bot, callbackQuery);
+    } else if (data === 'continue_session') {
+      // Обработка продолжения сессии
+      caseHandlers.handleContinueSession(bot, callbackQuery);
+    } else if (data.startsWith('menu_')) {
+      // Обработка выбора пункта меню
+      menuHandlers.handleMenuSelection(bot, callbackQuery);
+    } else if (data.startsWith('admin_')) {
+      // Обработка административных действий
+      adminHandlers.handleAdminAction(bot, callbackQuery);
+    } else if (data.startsWith('subscription_')) {
+      // Обработка действий с подпиской
+      subscriptionHandlers.handleSubscriptionAction(bot, callbackQuery);
+    }
+  }
+});
+
 // u041eu0431u0440u0430u0431u043eu0442u0447u0438u043a u0437u0430u0432u0435u0440u0448u0435u043du0438u044f u043fu0440u043eu0446u0435u0441u0441u0430
 process.on('SIGINT', () => {
   console.log('u0411u043eu0442 u043eu0441u0442u0430u043du0430u0432u043bu0438u0432u0430u0435u0442u0441u044f...');
