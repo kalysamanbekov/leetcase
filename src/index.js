@@ -26,77 +26,140 @@ const bot = new TelegramBot(config.telegramToken, config.botConfig);
 
 console.log('Бот запущен...');
 
-// Обработчики команд
-bot.onText(/\/start/, (msg) => commandHandlers.handleStart(bot, msg));
-bot.onText(/\/help/, (msg) => commandHandlers.handleHelp(bot, msg));
-bot.onText(/\/info/, (msg) => commandHandlers.handleInfo(bot, msg));
-bot.onText(/\/reset/, (msg) => commandHandlers.handleReset(bot, msg));
+// Импортируем утилиты для работы с чатами
+const chatUtils = require('./utils/chatUtils');
+
+// Обработчики команд - отвечаем только в приватных чатах
+bot.onText(/\/start/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    commandHandlers.handleStart(bot, msg);
+  }
+});
+
+bot.onText(/\/help/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    commandHandlers.handleHelp(bot, msg);
+  }
+});
+
+bot.onText(/\/info/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    commandHandlers.handleInfo(bot, msg);
+  }
+});
+
+bot.onText(/\/reset/, (msg) => {
+  if (chatUtils.isPrivateChat(msg)) {
+    commandHandlers.handleReset(bot, msg);
+  }
+});
 
 // Обработчик команды /ai с параметрами
 bot.onText(/\/ai (.+)/, (msg, match) => {
-  const userId = msg.from.id.toString();
-  
-  // Проверяем, может ли пользователь отправить запрос
-  if (subscriptionService.canSendRequest(userId)) {
-    // Регистрируем запрос
-    subscriptionService.registerRequest(userId);
-    aiHandler.handleAiRequest(bot, msg, match);
-  } else {
-    // Отправляем сообщение о необходимости подписки
-    subscriptionHandlers.sendSubscriptionRequiredMessage(bot, msg.chat.id);
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    const userId = msg.from.id.toString();
+    
+    // Проверяем, может ли пользователь отправить запрос
+    if (subscriptionService.canSendRequest(userId)) {
+      // Регистрируем запрос
+      subscriptionService.registerRequest(userId);
+      aiHandler.handleAiRequest(bot, msg, match);
+    } else {
+      // Отправляем сообщение о необходимости подписки
+      subscriptionHandlers.sendSubscriptionRequiredMessage(bot, msg.chat.id);
+    }
   }
 });
 
 // Обработчик команды /ai без параметров
 bot.onText(/\/ai$/, (msg) => {
-  const chatId = msg.chat.id;
-  bot.sendMessage(
-    chatId,
-    'Пожалуйста, укажите ваш вопрос после команды /ai. Например: /ai Расскажи о погоде в Бишкеке'
-  );
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    const chatId = msg.chat.id;
+    bot.sendMessage(
+      chatId,
+      'Пожалуйста, укажите ваш вопрос после команды /ai. Например: /ai Расскажи о погоде в Бишкеке'
+    );
+  }
 });
 
 // Обработчик команды /case для выбора категории кейса
 bot.onText(/\/case/, (msg) => {
-  const userId = msg.from.id.toString();
-  
-  // Проверяем, может ли пользователь отправить запрос
-  if (subscriptionService.canSendRequest(userId)) {
-    // Регистрируем запрос
-    subscriptionService.registerRequest(userId);
-    caseHandlers.handleCaseCommand(bot, msg);
-  } else {
-    // Отправляем сообщение о необходимости подписки
-    subscriptionHandlers.sendSubscriptionRequiredMessage(bot, msg.chat.id);
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    const userId = msg.from.id.toString();
+    
+    // Проверяем, может ли пользователь отправить запрос
+    if (subscriptionService.canSendRequest(userId)) {
+      // Регистрируем запрос
+      subscriptionService.registerRequest(userId);
+      caseHandlers.handleCaseCommand(bot, msg);
+    } else {
+      // Отправляем сообщение о необходимости подписки
+      subscriptionHandlers.sendSubscriptionRequiredMessage(bot, msg.chat.id);
+    }
   }
 });
 
 // Обработчик команды /end для завершения текущей сессии
 bot.onText(/\/end/, (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id.toString();
-  
-  if (assistantsService.hasActiveSession(userId)) {
-    assistantsService.endSession(userId);
-    bot.sendMessage(chatId, 'Ваша сессия с ассистентом завершена. Используйте /case, чтобы начать новую.');
-  } else {
-    bot.sendMessage(chatId, 'У вас нет активной сессии с ассистентом.');
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id.toString();
+    
+    if (assistantsService.hasActiveSession(userId)) {
+      assistantsService.endSession(userId);
+      bot.sendMessage(chatId, 'Ваша сессия с ассистентом завершена. Используйте /case, чтобы начать новую.');
+    } else {
+      bot.sendMessage(chatId, 'У вас нет активной сессии с ассистентом.');
+    }
   }
 });
 
 // Обработчики команд для управления подпиской
-bot.onText(/\/subscribe/, (msg) => subscriptionHandlers.handleSubscribe(bot, msg));
-bot.onText(/\/status/, (msg) => subscriptionHandlers.handleStatus(bot, msg));
+bot.onText(/\/subscribe/, (msg) => {
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    subscriptionHandlers.handleSubscribe(bot, msg);
+  }
+});
+
+bot.onText(/\/status/, (msg) => {
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    subscriptionHandlers.handleStatus(bot, msg);
+  }
+});
 
 // Обработчики административных команд
-bot.onText(/\/admin/, (msg) => adminHandlers.handleAdminCommand(bot, msg));
-bot.onText(/\/reset_counter (.+)/, (msg, match) => adminHandlers.handleResetCounterCommand(bot, msg, match));
-bot.onText(/\/add_premium (.+)/, (msg, match) => adminHandlers.handleAddPremiumCommand(bot, msg, match));
+bot.onText(/\/admin/, (msg) => {
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    adminHandlers.handleAdminCommand(bot, msg);
+  }
+});
+
+bot.onText(/\/reset_counter (.+)/, (msg, match) => {
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    adminHandlers.handleResetCounterCommand(bot, msg, match);
+  }
+});
+
+bot.onText(/\/add_premium (.+)/, (msg, match) => {
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    adminHandlers.handleAddPremiumCommand(bot, msg, match);
+  }
+});
 
 // Обработчик текстовых сообщений (кроме команд)
 bot.on('text', async (msg) => {
-  // Проверяем, что сообщение не является командой
-  if (!msg.text.startsWith('/')) {
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg) && !msg.text.startsWith('/')) {
+    // Проверяем, что сообщение не является командой
     // Проверяем, является ли сообщение нажатием на кнопку меню
     const menuButtons = [
       '❓ Помощь',
@@ -155,10 +218,12 @@ bot.on('photo', (msg) => messageHandlers.handlePhoto(bot, msg));
 
 // Обработчик голосовых сообщений
 bot.on('voice', async (msg) => {
-  const userId = msg.from.id.toString();
-  const chatId = msg.chat.id;
-  
-  try {
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    const userId = msg.from.id.toString();
+    const chatId = msg.chat.id;
+    
+    try {
     // Проверяем, может ли пользователь отправить запрос
     if (subscriptionService.canSendRequest(userId)) {
       // Регистрируем запрос
@@ -199,43 +264,49 @@ bot.on('polling_error', (error) => {
 
 // Обработчик необработанных сообщений
 bot.on('message', (msg) => {
-  // Обрабатываем только те типы сообщений, которые не обрабатываются выше
-  // Не отправляем сообщение об ошибке для голосовых сообщений
-  if (!msg.text && !msg.photo && !msg.voice) {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, 'Я пока не умею обрабатывать этот тип сообщений.');
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(msg)) {
+    // Обрабатываем только те типы сообщений, которые не обрабатываются выше
+    // Не отправляем сообщение об ошибке для голосовых сообщений
+    if (!msg.text && !msg.photo && !msg.voice) {
+      const chatId = msg.chat.id;
+      bot.sendMessage(chatId, 'Я пока не умею обрабатывать этот тип сообщений.');
+    }
   }
 });
 
 // Обработчик callback запросов (для кнопок)
 bot.on('callback_query', (callbackQuery) => {
-  const data = callbackQuery.data;
-  
-  if (data.startsWith('category_')) {
-    // Обработка выбора категории кейса
-    caseHandlers.handleCategorySelection(bot, callbackQuery);
-  } else if (data === 'end_session') {
-    // Обработка завершения сессии
-    caseHandlers.handleEndSession(bot, callbackQuery);
-  } else if (data === 'continue_session') {
-    // Обработка продолжения сессии
-    caseHandlers.handleContinueSession(bot, callbackQuery);
-  } else if (data === 'payment_subscription') {
-    // Обработка запроса на оплату подписки
-    subscriptionHandlers.handlePaymentCallback(bot, callbackQuery);
-  } else if (data === 'simulate_payment') {
-    // Обработка имитации оплаты
-    subscriptionHandlers.handleSimulatePayment(bot, callbackQuery);
-  } else if (data === 'admin_reset_counter') {
-    // Обработка сброса счетчика запросов
-    adminHandlers.handleResetCounter(bot, callbackQuery);
-  } else if (data === 'admin_add_premium') {
-    // Обработка добавления премиум-подписки
-    adminHandlers.handleAddPremium(bot, callbackQuery);
-  } else if (data === 'premium_benefits') {
-    // Обработка запроса на просмотр преимуществ премиум-подписки
-    const channelSubscriptionService = require('./services/channelSubscriptionService');
-    channelSubscriptionService.sendPremiumBenefits(bot, callbackQuery);
+  // Отвечаем только в приватных чатах
+  if (chatUtils.isPrivateChat(callbackQuery.message)) {
+    const data = callbackQuery.data;
+    
+    if (data.startsWith('category_')) {
+      // Обработка выбора категории кейса
+      caseHandlers.handleCategorySelection(bot, callbackQuery);
+    } else if (data === 'end_session') {
+      // Обработка завершения сессии
+      caseHandlers.handleEndSession(bot, callbackQuery);
+    } else if (data === 'continue_session') {
+      // Обработка продолжения сессии
+      caseHandlers.handleContinueSession(bot, callbackQuery);
+    } else if (data === 'payment_subscription') {
+      // Обработка запроса на оплату подписки
+      subscriptionHandlers.handlePaymentCallback(bot, callbackQuery);
+    } else if (data === 'simulate_payment') {
+      // Обработка имитации оплаты
+      subscriptionHandlers.handleSimulatePayment(bot, callbackQuery);
+    } else if (data === 'admin_reset_counter') {
+      // Обработка сброса счетчика запросов
+      adminHandlers.handleResetCounter(bot, callbackQuery);
+    } else if (data === 'admin_add_premium') {
+      // Обработка добавления премиум-подписки
+      adminHandlers.handleAddPremium(bot, callbackQuery);
+    } else if (data === 'premium_benefits') {
+      // Обработка запроса на просмотр преимуществ премиум-подписки
+      const channelSubscriptionService = require('./services/channelSubscriptionService');
+      channelSubscriptionService.sendPremiumBenefits(bot, callbackQuery);
+    }
   }
 });
 
