@@ -8,9 +8,13 @@ const subscriptionHandlers = require('./handlers/subscriptionHandlers_new');
 const adminHandlers = require('./handlers/adminHandlers');
 const menuHandlers = require('./handlers/menuHandlers');
 const assistantsService = require('./services/assistantsService');
-const subscriptionService = require('./services/subscriptionService');
+// Используем новый сервис подписок с MongoDB
+const subscriptionService = require('./services/subscriptionService_mongo');
 const whisperService = require('./services/whisperService');
 const { generateResponse } = require('./services/openaiService');
+
+// Импортируем модуль для работы с базой данных
+const { initDatabase } = require('./db');
 
 // Импортируем HTTP-сервер для Render
 require('./server');
@@ -20,6 +24,13 @@ if (!config.telegramToken) {
   console.error('Ошибка: Не указан токен Telegram бота. Добавьте TELEGRAM_BOT_TOKEN в файл .env');
   process.exit(1);
 }
+
+// Инициализируем базу данных
+initDatabase().then(() => {
+  console.log('База данных успешно инициализирована');
+}).catch(error => {
+  console.error('Ошибка при инициализации базы данных:', error);
+});
 
 // Создание экземпляра бота
 const bot = new TelegramBot(config.telegramToken, config.botConfig);

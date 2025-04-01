@@ -8,6 +8,9 @@ const path = require('path');
 const webhookPath = path.join(__dirname, 'webhook.js');
 const { setupWebhook, startServer } = require(webhookPath);
 
+// Импортируем модуль для работы с базой данных
+const { initDatabase } = require('./db');
+
 // u041fu0440u043eu0432u0435u0440u043au0430 u043du0430u043bu0438u0447u0438u044f u0442u043eu043au0435u043du0430
 if (!config.telegramToken) {
   console.error('u041eu0448u0438u0431u043au0430: u041du0435 u0443u043au0430u0437u0430u043d u0442u043eu043au0435u043d Telegram u0431u043eu0442u0430. u0414u043eu0431u0430u0432u044cu0442u0435 TELEGRAM_BOT_TOKEN u0432 u0444u0430u0439u043b .env');
@@ -19,6 +22,13 @@ if (!process.env.WEBHOOK_URL) {
   console.error('u041eu0448u0438u0431u043au0430: u041du0435 u0443u043au0430u0437u0430u043d URL u0434u043bu044f webhook. u0414u043eu0431u0430u0432u044cu0442u0435 WEBHOOK_URL u0432 u043du0430u0441u0442u0440u043eu0439u043au0438 u043eu043au0440u0443u0436u0435u043du0438u044f.');
   process.exit(1);
 }
+
+// Инициализируем базу данных
+initDatabase().then(() => {
+  console.log('База данных успешно инициализирована');
+}).catch(error => {
+  console.error('Ошибка при инициализации базы данных:', error);
+});
 
 // u0421u043eu0437u0434u0430u043du0438u0435 u044du043au0437u0435u043cu043fu043bu044fu0440u0430 u0431u043eu0442u0430 u0431u0435u0437 polling
 const bot = new TelegramBot(config.telegramToken, { polling: false });
@@ -41,6 +51,9 @@ const whisperService = require('./services/whisperService');
 
 // Импортируем утилиты для работы с чатами
 const chatUtils = require('./utils/chatUtils');
+
+// Используем новый сервис подписок с MongoDB
+const subscriptionService = require('./services/subscriptionService_mongo');
 
 // u0420u0435u0433u0438u0441u0442u0440u0438u0440u0443u0435u043c u0432u0441u0435 u043eu0431u0440u0430u0431u043eu0442u0447u0438u043au0438 u043au043eu043cu0430u043du0434 - u043eu0442u0432u0435u0447u0430u0435u043c u0442u043eu043bu044cu043au043e u0432 u043fu0440u0438u0432u0430u0442u043du044bu0445 u0447u0430u0442u0430u0445
 bot.onText(/\/start/, (msg) => {
