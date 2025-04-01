@@ -73,9 +73,24 @@ async function createSession(userId, assistantId, category) {
  */
 async function waitForRunCompletion(threadId, runId) {
   return new Promise((resolve, reject) => {
+    // Устанавливаем максимальное время ожидания - 60 секунд
+    const MAX_WAIT_TIME = 60000; // 60 секунд
+    const startTime = Date.now();
+    let checkCount = 0;
+    
     const checkStatus = async () => {
       try {
-        console.log(`[DEBUG] Проверяем статус выполнения: threadId=${threadId}, runId=${runId}`);
+        checkCount++;
+        const elapsedTime = Date.now() - startTime;
+        console.log(`[DEBUG] Проверка #${checkCount}: Проверяем статус выполнения: threadId=${threadId}, runId=${runId}, прошло ${elapsedTime}ms`);
+        
+        // Проверяем, не превысили ли мы максимальное время ожидания
+        if (elapsedTime > MAX_WAIT_TIME) {
+          console.error(`[DEBUG] Превышено максимальное время ожидания (${MAX_WAIT_TIME}ms)`);
+          resolve('Извините, ответ от ассистента занимает слишком много времени. Пожалуйста, попробуйте еще раз.');
+          return;
+        }
+        
         const run = await openai.beta.threads.runs.retrieve(threadId, runId);
         console.log(`[DEBUG] Текущий статус: ${run.status}`);
         
@@ -104,25 +119,26 @@ async function waitForRunCompletion(threadId, runId) {
             }
             
             console.log(`[DEBUG] Сформирован ответ ассистента длиной ${responseText.length} символов`);
-            resolve(responseText);
+            resolve(responseText || 'Ассистент отправил пустой ответ.');
           } else {
             console.log(`[DEBUG] Ассистент не ответил или сообщение не найдено`);
-            resolve('Ассистент не ответил.');
+            resolve('Ассистент не ответил. Пожалуйста, попробуйте еще раз.');
           }
         } else if (run.status === 'failed' || run.status === 'cancelled' || run.status === 'expired') {
           console.error(`[DEBUG] Выполнение завершилось с ошибкой: ${run.status}`);
           if (run.last_error) {
             console.error(`[DEBUG] Детали ошибки: ${JSON.stringify(run.last_error)}`);
           }
-          reject(new Error(`Выполнение завершилось с ошибкой: ${run.status}`));
+          resolve(`Произошла ошибка при обработке запроса: ${run.status}. Пожалуйста, попробуйте еще раз.`);
         } else {
           // Продолжаем проверять статус
-          console.log(`[DEBUG] Ожидаем завершения, проверим снова через 1 секунду`);
+          console.log(`[DEBUG] Ожидаем завершения, проверим снова через 1 секунду (проверка #${checkCount})`);
           setTimeout(checkStatus, 1000);
         }
       } catch (error) {
         console.error(`[DEBUG] Ошибка при проверке статуса: ${error.message}`);
-        reject(error);
+        // Вместо отклонения промиса, возвращаем сообщение об ошибке
+        resolve(`Произошла ошибка при обработке запроса: ${error.message}. Пожалуйста, попробуйте еще раз.`);
       }
     };
     
