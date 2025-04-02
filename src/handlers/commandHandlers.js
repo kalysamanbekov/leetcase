@@ -30,11 +30,7 @@ const handleStart = (bot, msg) => {
     {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '📊 Аналитика', callback_data: 'category_📊 Аналитика' }],
-          [{ text: '🧠 Стратегия', callback_data: 'category_🧠 Стратегия' }],
-          [{ text: '🤝 Soft Skills', callback_data: 'category_🤝 Soft Skills' }],
-          [{ text: '🔍 Product Sense', callback_data: 'category_🔍 Product Sense' }],
-          [{ text: '🧩 Брейнтизеры', callback_data: 'category_🧩 Брейнтизеры' }]
+          [{ text: 'Дальше', callback_data: 'next' }]
         ]
       }
     }

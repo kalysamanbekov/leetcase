@@ -75,8 +75,17 @@ async function handleCategorySelection(bot, callbackQuery) {
   const userId = callbackQuery.from.id.toString();
   const messageId = callbackQuery.message.message_id;
   
-  // Получаем выбранную категорию из callback_data
-  const category = callbackQuery.data.replace('category_', '');
+  // Определяем категорию в зависимости от типа callback_data
+  let category;
+  
+  if (callbackQuery.data === 'next') {
+    // Если нажата кнопка "Дальше", выбираем случайную категорию
+    const categories = Object.keys(ASSISTANTS.assistantIds);
+    category = categories[Math.floor(Math.random() * categories.length)];
+  } else {
+    // Иначе получаем выбранную категорию из callback_data
+    category = callbackQuery.data.replace('category_', '');
+  }
   
   // Получаем ID ассистента для выбранной категории
   const assistantId = ASSISTANTS.assistantIds[category];

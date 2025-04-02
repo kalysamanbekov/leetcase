@@ -236,6 +236,9 @@ bot.on('callback_query', (callbackQuery) => {
     // Обработка запроса на просмотр преимуществ премиум-подписки
     const channelSubscriptionService = require('./services/channelSubscriptionService');
     channelSubscriptionService.sendPremiumBenefits(bot, callbackQuery);
+  } else if (data === 'next') {
+    // Обработка нажатия кнопки "Дальше"
+    caseHandlers.handleCategorySelection(bot, callbackQuery);
   }
 });
 
