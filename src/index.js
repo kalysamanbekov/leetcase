@@ -214,6 +214,9 @@ bot.on('callback_query', (callbackQuery) => {
   if (data.startsWith('category_')) {
     // Обработка выбора категории кейса
     caseHandlers.handleCategorySelection(bot, callbackQuery);
+  } else if (data === 'next') {
+    // Обработка нажатия кнопки "Дальше"
+    caseHandlers.handleCategorySelection(bot, callbackQuery);
   } else if (data === 'end_session') {
     // Обработка завершения сессии
     caseHandlers.handleEndSession(bot, callbackQuery);
