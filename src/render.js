@@ -53,12 +53,31 @@ bot.on('callback_query', (callbackQuery) => {
   if (data.startsWith('category_')) {
     // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0432u044bu0431u043eu0440u0430 u043au0430u0442u0435u0433u043eu0440u0438u0438
     caseHandlers.handleCategorySelection(bot, callbackQuery);
+  } else if (data === 'next') {
+    // u041eu0431u0440u0430u0431u043eu0442u043au0430 u043du0430u0436u0430u0442u0438u044f u043au043du043eu043fu043au0438 "u0414u0430u043bu044cu0448u0435"
+    caseHandlers.handleCategorySelection(bot, callbackQuery);
   } else if (data === 'end_session') {
     // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0437u0430u0432u0435u0440u0448u0435u043du0438u044f u0441u0435u0441u0441u0438u0438
     caseHandlers.handleEndSession(bot, callbackQuery);
   } else if (data === 'continue_session') {
     // u041eu0431u0440u0430u0431u043eu0442u043au0430 u043fu0440u043eu0434u043eu043bu0436u0435u043du0438u044f u0441u0435u0441u0441u0438u0438
     caseHandlers.handleContinueSession(bot, callbackQuery);
+  } else if (data === 'payment_subscription') {
+    // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0437u0430u043fu0440u043eu0441u0430 u043du0430 u043eu043fu043bu0430u0442u0443 u043fu043eu0434u043fu0438u0441u043au0438
+    subscriptionHandlers.handlePaymentCallback(bot, callbackQuery);
+  } else if (data === 'simulate_payment') {
+    // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0438u043cu0438u0442u0430u0446u0438u0438 u043eu043fu043bu0430u0442u044b
+    subscriptionHandlers.handleSimulatePayment(bot, callbackQuery);
+  } else if (data === 'admin_reset_counter') {
+    // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0441u0431u0440u043eu0441u0430 u0441u0447u0435u0442u0447u0438u043au0430 u0437u0430u043fu0440u043eu0441u043eu0432
+    adminHandlers.handleResetCounter(bot, callbackQuery);
+  } else if (data === 'admin_add_premium') {
+    // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0434u043eu0431u0430u0432u043bu0435u043du0438u044f u043fu0440u0435u043cu0438u0443u043c-u043fu043eu0434u043fu0438u0441u043au0438
+    adminHandlers.handleAddPremium(bot, callbackQuery);
+  } else if (data === 'premium_benefits') {
+    // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0437u0430u043fu0440u043eu0441u0430 u043du0430 u043fu0440u043eu0441u043cu043eu0442u0440 u043fu0440u0435u0438u043cu0443u0449u0435u0441u0442u0432 u043fu0440u0435u043cu0438u0443u043c-u043fu043eu0434u043fu0438u0441u043au0438
+    const channelSubscriptionService = require('./services/channelSubscriptionService');
+    channelSubscriptionService.sendPremiumBenefits(bot, callbackQuery);
   }
 });
 
@@ -101,11 +120,4 @@ bot.on('message', async (msg) => {
   if (msg.text) {
     await caseHandlers.handleCaseMessage(bot, msg);
   }
-});
-
-// u041eu0431u0440u0430u0431u043eu0442u0447u0438u043a u0437u0430u0432u0435u0440u0448u0435u043du0438u044f u043fu0440u043eu0446u0435u0441u0441u0430
-process.on('SIGINT', () => {
-  console.log('u0411u043eu0442 u043eu0441u0442u0430u043du0430u0432u043bu0438u0432u0430u0435u0442u0441u044f...');
-  server.close();
-  process.exit(0);
 });
