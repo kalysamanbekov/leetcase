@@ -175,7 +175,7 @@ async function notifyPremiumDeactivation(bot, userId) {
       {
         reply_markup: {
           inline_keyboard: [
-            [{ text: 'Оформить подписку', url: 'https://t.me/tribute/app?startapp=srFj' }]
+            [{ text: 'Оформить подписку', url: 'https://t.me/tribute/app?startapp=srNj' }]
           ]
         }
       }
@@ -196,11 +196,11 @@ async function sendSubscriptionRequiredMessage(bot, chatId) {
     chatId,
     `⭐ Для доступа к этой функции требуется премиум-подписка.
 
-Стоимость подписки: $29 в месяц через сервис Трибут.`,
+Стоимость подписки: 1990 рублей в месяц через сервис Трибут.`,
     {
       reply_markup: {
         inline_keyboard: [
-          [{ text: 'Оформить подписку', url: 'https://t.me/tribute/app?startapp=srFj' }],
+          [{ text: 'Оформить подписку', url: 'https://t.me/tribute/app?startapp=srNj' }],
           [{ text: 'Подробнее о преимуществах', callback_data: 'premium_benefits' }]
         ]
       }
@@ -230,11 +230,11 @@ async function sendPremiumBenefits(bot, callbackQuery) {
 ✅ Доступ к эксклюзивным материалам и консультациям
 ✅ Персональные консультации от экспертов
 
-Стоимость: $29 в месяц.`,
+Стоимость: 1990 рублей в месяц.`,
     {
       reply_markup: {
         inline_keyboard: [
-          [{ text: 'Оформить подписку', url: 'https://t.me/tribute/app?startapp=srFj' }]
+          [{ text: 'Оформить подписку', url: 'https://t.me/tribute/app?startapp=srNj' }]
         ]
       }
     }
