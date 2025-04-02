@@ -41,7 +41,7 @@ const whisperService = require('./services/whisperService');
 bot.onText(/\/start/, (msg) => commandHandlers.handleStart(bot, msg));
 bot.onText(/\/help/, (msg) => commandHandlers.handleHelp(bot, msg));
 bot.onText(/\/reset/, (msg) => commandHandlers.handleReset(bot, msg));
-bot.onText(/\/case/, (msg) => caseHandlers.handleCase(bot, msg));
+bot.onText(/\/case/, (msg) => caseHandlers.handleCaseCommand(bot, msg));
 bot.onText(/\/menu/, (msg) => menuHandlers.handleMenu(bot, msg));
 bot.onText(/\/admin/, (msg) => adminHandlers.handleAdmin(bot, msg));
 bot.onText(/\/subscription/, (msg) => subscriptionHandlers.handleSubscription(bot, msg));
@@ -52,6 +52,9 @@ bot.on('callback_query', (callbackQuery) => {
   
   if (data.startsWith('category_')) {
     // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0432u044bu0431u043eu0440u0430 u043au0430u0442u0435u0433u043eu0440u0438u0438
+    caseHandlers.handleCategorySelection(bot, callbackQuery);
+  } else if (data === 'next') {
+    // u041eu0431u0440u0430u0431u043eu0442u043au0430 u043au043du043eu043fu043au0438 "u0414u0430u043bu044cu0448u0435"
     caseHandlers.handleCategorySelection(bot, callbackQuery);
   } else if (data === 'end_session') {
     // u041eu0431u0440u0430u0431u043eu0442u043au0430 u0437u0430u0432u0435u0440u0448u0435u043du0438u044f u0441u0435u0441u0441u0438u0438
