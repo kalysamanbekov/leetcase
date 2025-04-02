@@ -208,12 +208,7 @@ async function handleCaseMessage(bot, msg) {
       const subscriptionInfo = subscriptionService.getSubscriptionInfo(userId);
       
       // Отправляем информацию о количестве оставшихся запросов
-      if (subscriptionInfo.remainingFreeRequests > 0) {
-        await bot.sendMessage(
-          chatId,
-          `ℹ️ У вас осталось ${subscriptionInfo.remainingFreeRequests} бесплатных запросов.`
-        );
-      }
+      // Уведомление о количестве оставшихся запросов удалено
     }
     
     // Отправляем индикатор "печатает..."

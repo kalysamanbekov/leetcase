@@ -81,7 +81,6 @@ async function handleStatus(bot, msg) {
 
 ❌ У вас нет активной премиум-подписки
 ℹ️ Использовано запросов: ${subscriptionInfo.requestsCount} из ${subscriptionService.FREE_REQUESTS_LIMIT}
-ℹ️ Осталось бесплатных запросов: ${subscriptionInfo.remainingFreeRequests}
 
 Чтобы оформить подписку, используйте команду /subscribe`,
         {
