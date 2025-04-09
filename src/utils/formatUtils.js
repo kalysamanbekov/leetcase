@@ -10,6 +10,12 @@
 function formatGptTextForTelegram(text) {
   if (!text) return '';
   
+  // Сначала проверяем, содержит ли текст уже HTML-теги
+  // Если да, то возвращаем его как есть, чтобы избежать двойного форматирования
+  if (/<[a-z][\s\S]*>/i.test(text)) {
+    return text;
+  }
+  
   // Базовое структурирование - заменяем маркеры списков на символ •
   let formattedText = text
     .replace(/^- (.+)$/gm, '• $1') // Заменяем дефисы на маркеры списка
@@ -42,8 +48,8 @@ function formatGptTextForTelegram(text) {
   
   // Форматирование кода и других элементов
   formattedText = formattedText
-    // Блоки кода с указанием языка
-    .replace(/```([a-z]*)\n([\s\S]+?)\n```/g, '<pre language="$1">$2</pre>')
+    // Блоки кода - Telegram не поддерживает атрибут language в теге pre
+    .replace(/```([a-z]*)\n([\s\S]+?)\n```/g, '<pre>$2</pre>')
     // Инлайн-код
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     // Жирный текст
@@ -52,8 +58,17 @@ function formatGptTextForTelegram(text) {
     .replace(/\*(.+?)\*/g, '<i>$1</i>')
     // Ссылки в формате [текст](ссылка)
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-    // Цитаты
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+    // Цитаты - Telegram не поддерживает тег blockquote, заменяем на курсив
+    .replace(/^> (.+)$/gm, '<i>$1</i>');
+  
+  // Экранируем специальные символы HTML, которые могут вызвать проблемы
+  // Но только те, которые не являются частью HTML-тегов
+  formattedText = formattedText
+    .replace(/&(?!amp;|lt;|gt;)/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Восстанавливаем HTML-теги
+    .replace(/&lt;(\/?)(b|i|code|pre|a)(\s+[^&]*?)?&gt;/gi, '<$1$2$3>');
   
   return formattedText;
 }
