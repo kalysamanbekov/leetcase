@@ -223,6 +223,11 @@ async function handleCaseMessage(bot, msg) {
     // Форматируем ответ с помощью наших утилит
     const formattedResponse = formatUtils.formatGptTextForTelegram(response);
     
+    // Отладочное логирование - выводим сообщение перед отправкой
+    console.log('=== DEBUG: Отправляемое сообщение ===');
+    console.log(formattedResponse);
+    console.log('=== DEBUG: Конец сообщения ===');
+    
     // Отправляем ответ пользователю с HTML-разметкой
     bot.sendMessage(chatId, formattedResponse, {
       parse_mode: 'HTML',

@@ -10,43 +10,80 @@
 function formatGptTextForTelegram(text) {
   if (!text) return '';
   
-  // Если текст уже содержит HTML-теги, экранируем их, чтобы Telegram не пытался интерпретировать
-  if (/<b>|<i>|<code>|<pre>|<a\s/i.test(text)) {
-    console.log('Текст уже содержит HTML-теги, экранируем их');
-    return text
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+  // Простой подход - не используем регулярные выражения
+  // Используем только базовые замены для Telegram HTML
+  
+  // Заменим все HTML-подобные теги, чтобы избежать конфликтов
+  let cleanText = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Добавляем заголовки и подзаголовки
+  cleanText = cleanText
+    .replace(/^# (.+)$/gm, '<b>📝 $1</b>')  // заголовки 1 уровня
+    .replace(/^## (.+)$/gm, '<b>📌 $1</b>'); // заголовки 2 уровня
+
+  // Добавляем маркеры текста
+  const lines = cleanText.split('\n');
+  const processedLines = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    if (line.startsWith('```')) {
+      // Начало блока кода
+      const codeBlock = [];
+      i++; // Пропускаем строку с ```
+      
+      // Собираем все строки кода до закрывающего ```
+      while (i < lines.length && !lines[i].includes('```')) {
+        codeBlock.push(lines[i]);
+        i++;
+      }
+      
+      // Добавляем блок кода с тегами <pre>
+      processedLines.push(`<pre>${codeBlock.join('\n')}</pre>`);
+    } else if (line.trim().startsWith('- ')) {
+      // Маркированный список
+      processedLines.push(line.replace(/^- (.+)$/, '• $1'));
+    } else if (line.trim().startsWith('> ')) {
+      // Цитата
+      processedLines.push(line.replace(/^> (.+)$/, '<i>$1</i>'));
+    } else {
+      // Обычная строка
+      let processedLine = line;
+      
+      // Обрабатываем инлайн-код
+      processedLine = processedLine.replace(/`([^`]+)`/g, '<code>$1</code>');
+      
+      // Жирный текст (**текст**)
+      processedLine = processedLine.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      
+      // Курсив (*текст*)
+      processedLine = processedLine.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+      
+      // Ссылки [текст](ссылка)
+      processedLine = processedLine.replace(/\[([^\[\]]+)\]\(([^\(\)]+)\)/g, '<a href="$2">$1</a>');
+      
+      processedLines.push(processedLine);
+    }
   }
   
-  // Telegram поддерживает только теги: <b>, <i>, <code>, <pre>, <a href="...">
-  
-  // 1. Обрабатываем блоки кода - важно сделать это до обработки других элементов
-  // удаляем указание языка, если оно есть
-  let result = text.replace(/```(?:[a-z]+)?\n([\s\S]+?)\n```/g, '<pre>$1</pre>');
-  
-  // 2. Обрабатываем инлайн-код
-  result = result.replace(/`([^`]+?)`/g, '<code>$1</code>');
-  
-  // 3. Заменяем маркеры списков
-  result = result.replace(/^- (.+)$/gm, '• $1');
-  
-  // 4. Обрабатываем заголовки
-  result = result.replace(/^# (.+)$/gm, '<b>📝 $1</b>');
-  result = result.replace(/^## (.+)$/gm, '<b>📌 $1</b>');
-  
-  // 5. Обрабатываем жирный текст
-  result = result.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-  
-  // 6. Обрабатываем курсив
-  result = result.replace(/\*(.+?)\*/g, '<i>$1</i>');
-  
-  // 7. Обрабатываем ссылки
-  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-  
-  // 8. Обрабатываем цитаты как курсив
-  result = result.replace(/^> (.+)$/gm, '<i>$1</i>');
-  
-  return result;
+  // Добавляем специальные маркеры для разделов, если нужно
+  return processedLines.join('\n')
+    .replace(/Задача:/g, '<b>📝 Задача:</b>')
+    .replace(/Описание:/g, '<b>📝 Описание:</b>')
+    .replace(/Контекст:/g, '<b>📝 Контекст:</b>')
+    .replace(/Задачи:/g, '<b>📝 Задачи:</b>')
+    .replace(/Данные:/g, '<b>📝 Данные:</b>')
+    .replace(/Вопросы/g, '<b>📝 Вопросы</b>')
+    .replace(/Кейс:/g, '<b>📊 Кейс:</b>')
+    .replace(/Метрики:/g, '<b>📊 Метрики:</b>')
+    .replace(/Решение:/g, '<b>💡 Решение:</b>')
+    .replace(/Вывод:/g, '<b>💡 Вывод:</b>')
+    .replace(/Важно:/g, '<b>⚠️ Важно:</b>')
+    .replace(/Пример:/g, '<b>📋 Пример:</b>');
 }
 
 /**
