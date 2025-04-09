@@ -12,7 +12,7 @@ const openai = new OpenAI({
  * @param {string} systemMessage - Системное сообщение для настройки поведения модели
  * @returns {Promise<string>} - Ответ от модели
  */
-async function generateResponse(prompt, systemMessage = 'Ты помощник в Telegram боте. Отвечай кратко и по существу.') {
+async function generateResponse(prompt, systemMessage = 'Ты помощник в Telegram боте. Отвечай кратко и по существу. Используй форматирование Markdown: *жирный текст* для заголовков, _курсив_ для выделения, `код` для кода, и [текст](ссылка) для ссылок. НЕ ИСПОЛЬЗУЙ HTML-теги.') {
   try {
     // Создаем запрос к API
     const completion = await openai.chat.completions.create({
