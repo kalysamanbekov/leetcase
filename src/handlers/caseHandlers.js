@@ -228,9 +228,9 @@ async function handleCaseMessage(bot, msg) {
     console.log(formattedResponse);
     console.log('=== DEBUG: Конец сообщения ===');
     
-    // Отправляем ответ пользователю с HTML-разметкой
+    // Отправляем ответ пользователю с Markdown-разметкой
     bot.sendMessage(chatId, formattedResponse, {
-      parse_mode: 'HTML',
+      parse_mode: 'Markdown',
       disable_web_page_preview: true
     });
   } catch (error) {
