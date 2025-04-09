@@ -10,67 +10,43 @@
 function formatGptTextForTelegram(text) {
   if (!text) return '';
   
-  // Сначала проверяем, содержит ли текст уже HTML-теги
-  // Если да, то возвращаем его как есть, чтобы избежать двойного форматирования
-  if (/<[a-z][\s\S]*>/i.test(text)) {
-    return text;
+  // Если текст уже содержит HTML-теги, экранируем их, чтобы Telegram не пытался интерпретировать
+  if (/<b>|<i>|<code>|<pre>|<a\s/i.test(text)) {
+    console.log('Текст уже содержит HTML-теги, экранируем их');
+    return text
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
   
-  // Базовое структурирование - заменяем маркеры списков на символ •
-  let formattedText = text
-    .replace(/^- (.+)$/gm, '• $1') // Заменяем дефисы на маркеры списка
-    .replace(/^(\d+)\. (.+)$/gm, '$1. $2'); // Сохраняем нумерованные списки
+  // Telegram поддерживает только теги: <b>, <i>, <code>, <pre>, <a href="...">
   
-  // Форматирование заголовков с эмодзи
-  formattedText = formattedText
-    // Заголовки с определением подходящего эмодзи по контексту
-    .replace(/^# (.+?)(?:\s|$)/gm, (match, title) => {
-      let emoji = '📝'; // Эмодзи по умолчанию для заголовков
-      
-      // Выбираем эмодзи в зависимости от содержания заголовка
-      if (/анализ|метрик|данны[хе]|статисти[кч]/i.test(title)) emoji = '📊';
-      else if (/стратеги|план|развити[ея]|цел[иь]/i.test(title)) emoji = '🧠';
-      else if (/soft\s*skills|коммуникац|общени|команд/i.test(title)) emoji = '🤝';
-      else if (/product\s*sense|пользовател|клиент|потребност/i.test(title)) emoji = '🔍';
-      else if (/брейнтизер|головоломк|загадк|задач/i.test(title)) emoji = '🧩';
-      else if (/пример|образец|демонстрац/i.test(title)) emoji = '📋';
-      else if (/решени|ответ|вывод/i.test(title)) emoji = '💡';
-      else if (/важн|вниман|предупрежден/i.test(title)) emoji = '⚠️';
-      else if (/код|программ|разработк/i.test(title)) emoji = '💻';
-      
-      return `<b>${emoji} ${title}</b>`;
-    })
-    // Подзаголовки
-    .replace(/^## (.+?)(?:\s|$)/gm, (match, title) => {
-      let emoji = '📌'; // Эмодзи по умолчанию для подзаголовков
-      return `<b>${emoji} ${title}</b>`;
-    });
+  // 1. Обрабатываем блоки кода - важно сделать это до обработки других элементов
+  // удаляем указание языка, если оно есть
+  let result = text.replace(/```(?:[a-z]+)?\n([\s\S]+?)\n```/g, '<pre>$1</pre>');
   
-  // Форматирование кода и других элементов
-  formattedText = formattedText
-    // Блоки кода - Telegram не поддерживает атрибут language в теге pre
-    .replace(/```([a-z]*)\n([\s\S]+?)\n```/g, '<pre>$2</pre>')
-    // Инлайн-код
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // Жирный текст
-    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-    // Курсив
-    .replace(/\*(.+?)\*/g, '<i>$1</i>')
-    // Ссылки в формате [текст](ссылка)
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-    // Цитаты - Telegram не поддерживает тег blockquote, заменяем на курсив
-    .replace(/^> (.+)$/gm, '<i>$1</i>');
+  // 2. Обрабатываем инлайн-код
+  result = result.replace(/`([^`]+?)`/g, '<code>$1</code>');
   
-  // Экранируем специальные символы HTML, которые могут вызвать проблемы
-  // Но только те, которые не являются частью HTML-тегов
-  formattedText = formattedText
-    .replace(/&(?!amp;|lt;|gt;)/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    // Восстанавливаем HTML-теги
-    .replace(/&lt;(\/?)(b|i|code|pre|a)(\s+[^&]*?)?&gt;/gi, '<$1$2$3>');
+  // 3. Заменяем маркеры списков
+  result = result.replace(/^- (.+)$/gm, '• $1');
   
-  return formattedText;
+  // 4. Обрабатываем заголовки
+  result = result.replace(/^# (.+)$/gm, '<b>📝 $1</b>');
+  result = result.replace(/^## (.+)$/gm, '<b>📌 $1</b>');
+  
+  // 5. Обрабатываем жирный текст
+  result = result.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  
+  // 6. Обрабатываем курсив
+  result = result.replace(/\*(.+?)\*/g, '<i>$1</i>');
+  
+  // 7. Обрабатываем ссылки
+  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  
+  // 8. Обрабатываем цитаты как курсив
+  result = result.replace(/^> (.+)$/gm, '<i>$1</i>');
+  
+  return result;
 }
 
 /**
