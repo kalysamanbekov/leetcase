@@ -217,8 +217,17 @@ async function handleCaseMessage(bot, msg) {
     // Отправляем сообщение ассистенту и получаем ответ
     const response = await assistantsService.sendMessage(userId, text);
     
-    // Отправляем ответ пользователю
-    bot.sendMessage(chatId, response);
+    // Импортируем утилиты форматирования если они еще не импортированы
+    const formatUtils = require('../utils/formatUtils');
+    
+    // Форматируем ответ с помощью наших утилит
+    const formattedResponse = formatUtils.formatGptTextForTelegram(response);
+    
+    // Отправляем ответ пользователю с HTML-разметкой
+    bot.sendMessage(chatId, formattedResponse, {
+      parse_mode: 'HTML',
+      disable_web_page_preview: true
+    });
   } catch (error) {
     console.error('Ошибка при обработке сообщения:', error);
     
